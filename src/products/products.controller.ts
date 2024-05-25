@@ -1,9 +1,11 @@
-import { Controller, Param, Body, Get, Delete, Post, Put, NotFoundException } from '@nestjs/common';
+import { Controller, Param, Body, Get, Delete, Post, Put, NotFoundException, UseInterceptors } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CreateProductDTO } from './dtos/create-product.dto';
 import { UpdateProductDTO } from './dtos/update-product.dto';
+import { LoggerInterceptor } from 'src/shared/interceptors/logger.interceptor';
 
+// @UseInterceptors(LoggerInterceptor)
 @Controller('products')
 export class ProductsController {
     // this.productsService = productsService;  typescript feature - empty constructor {} creates all parameters listed in constructor args
