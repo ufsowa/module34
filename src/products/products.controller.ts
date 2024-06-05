@@ -1,53 +1,65 @@
-import { Controller, Param, Body, Get, Delete, Post, Put, NotFoundException, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Param,
+  Body,
+  Get,
+  Delete,
+  Post,
+  Put,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ParseUUIDPipe } from '@nestjs/common';
 import { CreateProductDTO } from './dtos/create-product.dto';
 import { UpdateProductDTO } from './dtos/update-product.dto';
-import { LoggerInterceptor } from 'src/shared/interceptors/logger.interceptor';
 
 // @UseInterceptors(LoggerInterceptor)
 @Controller('products')
 export class ProductsController {
-    // this.productsService = productsService;  typescript feature - empty constructor {} creates all parameters listed in constructor args
-    constructor(private productsService: ProductsService) {}
+  // this.productsService = productsService;  typescript feature - empty constructor {} creates all parameters listed in constructor args
+  constructor(private productsService: ProductsService) {}
 
-    @Get('/')
-    getAll(): any {
-        return this.productsService.getAll();
-    }
+  @Get('/')
+  getAll(): any {
+    // Jeśli Nest zauważy, że próbujemy jako response zwrócić Promise, to zwyczajnie poczeka na jego wykonanie i jako response zwróci jego wynik. Nawet jeśli więc samo pobieranie danych chwilę potrwa, to NestJS na nie poczeka i zwróci je jako odpowiedź dopiero kiedy będą gotowe.
+    // Dotyczy to tylko return
+    return this.productsService.getAll();
+  }
 
-    @Get('/:id')
-    getById(@Param('id', new ParseUUIDPipe()) id: string): any {
-        const prod = this.productsService.getById(id);
-        if (!prod) throw new NotFoundException('Product not found')     // error handling https://docs.nestjs.com/exception-filters#built-in-http-exceptions
-        return prod;
-    }
+  @Get('/:id')
+  async getById(@Param('id', new ParseUUIDPipe()) id: string) {
+    // Powiedzieliśmy wcześniej, że w return bez problemu możemy umieścić Promise, bo NestJS w takiej sytuacji po prostu na niego poczeka. Taka wspaniałomyślność tyczy się jednak tylko return. Jeśli taki Promise pojawi się w kodzie wcześniej, to JS na niego nie poczeka.
+    // Na szczęście możemy łatwo to zrealizować. Wystarczy użyć składni async/await.
+    const prod = await this.productsService.getById(id);
+    if (!prod) throw new NotFoundException('Product not found'); // error handling https://docs.nestjs.com/exception-filters#built-in-http-exceptions
+    return prod;
+  }
 
-    @Delete('/:id')
-    deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
-        if (!this.productsService.getById(id))
-            throw new NotFoundException('Product not found')
-        this.productsService.deleteById(id);
-        return { success: true };
-    }
+  @Delete('/:id')
+  async deleteById(@Param('id', new ParseUUIDPipe()) id: string) {
+    if (!(await this.productsService.getById(id)))
+      throw new NotFoundException('Product not found');
+    await this.productsService.deleteById(id);
+    return { success: true };
+  }
 
-    @Post('/')
-    create(@Body() productData: CreateProductDTO) {                           // DTO
-        return this.productsService.create(productData);
-    }
+  @Post('/')
+  create(@Body() productData: CreateProductDTO) {
+    // DTO - data object model in /src/products/dtos/create-product.dto.ts
+    return this.productsService.create(productData);
+  }
 
-    @Put('/:id')
-    update(
-        @Param('id', new ParseUUIDPipe()) id: string,
-        @Body() productData: UpdateProductDTO,
-    ) {
-        if (!this.productsService.getById(id))
-            throw new NotFoundException('Product not found')
+  @Put('/:id')
+  async update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() productData: UpdateProductDTO,
+  ) {
+    if (!(await this.productsService.getById(id)))
+      throw new NotFoundException('Product not found');
 
-        this.productsService.updateById(id, productData);
-        return { success: true };
-    }
-
+    await this.productsService.updateById(id, productData);
+    return { success: true };
+  }
 }
 
 /*  DTO (Data Object Model) - 

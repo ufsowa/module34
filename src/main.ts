@@ -7,7 +7,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new LoggerInterceptor());
-  app.setGlobalPrefix('api'); 
+  app.setGlobalPrefix('api');
+
+  app.enableShutdownHooks();    // prisma db, shared/services/prisma connect
+
   await app.listen(3000);
 }
 bootstrap();
