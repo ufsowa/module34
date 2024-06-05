@@ -18,14 +18,35 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  orders Order[]
 }
 
 model Order {
   id String  @id @default(uuid())
-  productId String
-  client String
-  address String
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId String?
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Client {
+  id String  @id @default(uuid())
+  name String
+  address String
+  orders Order[]
+}
+
+// npx prisma migrate dev --name add-ondelete-for-order
+// npx prisma db push
+// npx prisma db seed
+
+// Oczywiście, oprócz SetNull mamy też inne opcje.
+// Cascade – mówi, że w przypadku usunięcia rekordu powiązanego, trzeba usunąć nasz rekord. W przypadku usunięcia produktu, powiązane zamówienie również zostało by więc usunięte.
+// Restrict – zablokowałoby zwyczajnie możliwość usunięcia powiązanego rekordu. Przy próbie usunięcia produktu, otrzymalibyśmy więc błąd, że to niemożliwe, gdyż istnieje powiązane z nim zamówienie lub zamówienia.
+// NoAction – w przypadku MySQL-a działa identycznie jak Restrict.
+// SetDefault – w przypadku usunięcia powiązanego rekordu, wartość pola wskazującego byłaby zamieniona na wartość domyślną (tę, która jest podana w @default).
+// Warto wspomnieć, że oprócz onDelete mamy również opcję onUpdate, która pozwala z kolei reagować na modyfikację rekordu.
+// https://www.prisma.io/docs/concepts/components/prisma-schema/relations/referential-actions

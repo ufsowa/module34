@@ -26,6 +26,18 @@ export class ProductsController {
     return this.productsService.getAll();
   }
 
+  @Get('/extended')
+  getAllExtended(): any {
+    return this.productsService.getAllExtended();
+  }
+
+  @Get('/extended/:id')
+  async getExtendedById(@Param('id', new ParseUUIDPipe()) id: string) {
+    const prod = await this.productsService.getExtendedById(id);
+    if (!prod) throw new NotFoundException('Product not found');
+    return prod;
+  }
+
   @Get('/:id')
   async getById(@Param('id', new ParseUUIDPipe()) id: string) {
     // Powiedzieliśmy wcześniej, że w return bez problemu możemy umieścić Promise, bo NestJS w takiej sytuacji po prostu na niego poczeka. Taka wspaniałomyślność tyczy się jednak tylko return. Jeśli taki Promise pojawi się w kodzie wcześniej, to JS na niego nie poczeka.
